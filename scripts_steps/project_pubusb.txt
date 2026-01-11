@@ -1,0 +1,156 @@
+--> to see the topic and subscription in tablular format 
+gcloud pubsub subscriptions list \
+--format="table(name,topic)"
+
+--> to delete subscription  or topic 
+
+gcloud pubsub subscriptions delete cust_orders_topic-sub
+
+gcloud pubsub topics delete cust_orders_topic
+-->create topic 
+gcloud pubsub topics create orders-topic-gcloud
+
+--> create subscription for the topic and grant access to buck for the service accound 
+gcloud pubsub subscriptions create  orders-topic-gcloud-sub --topic=orders-topic-gcloud
+
+-->> publsig teh message to topic 
+gcloud pubsub topics publish  orders-topic-gcloud \
+--message='{"order_id":"123","amount":5000}'
+
+
+
+
+exmple scenarios :
+-----------------
+Note :
+here publisher is gcs bucker 
+and subscriber is gcs bucket 
+
+
+1)create bucket to publish  file 
+gsutil mb gs://pub-sub-sourcs
+2)create bucket to sub 
+gsutil mb gs://pub-sub-target
+3)create topic 
+gcloud pubsub topics create pub-sub-bucket-topic
+4)create subscrittpions 
+gcloud pubsub subscriptions create pub-sub-bucket-topic-pub
+5) enable notiifcation in source bucket 
+gsutil notification create -t pub-sub-bucket-topic -f json gs://pub-sub-sourcs
+
+gsutil notification create -t orders-topic-gcloud-sub -f json gs://pub-sub-sourcs
+
+>gsutils cp orders.csv gs://pub-sub-sourcs
+
+exmple scenarios 2:
+-----------------
+Note :
+publisher is pythin script 
+consumer is bucket 
+
+1) create target bucket 
+gsutil mb gs://pub-sub-python-orders-bucket
+->to grant access to service account 
+gcloud storage buckets add-iam-policy-binding gs://pub-sub-python-orders-bucket \
+  --member="serviceAccount:916677452576-compute@developer.gserviceaccount.com" \
+  --role="roles/storage.objectAdmin"
+1) create topic 
+gcloud pubsub topics create py-orders-topic
+2) create subscription
+gcloud pubsub subscriptions create py-orders-topic-sub \
+  --project=vctbatch-dev45 \
+  --topic=py-orders-topic \
+  --cloud-storage-bucket=pub-sub-python-orders-bucket \
+  --cloud-storage-file-prefix=pubsub-orders	 \
+  --cloud-storage-file-suffix=.json \
+  --cloud-storage-max-bytes=10485760 \
+  --cloud-storage-max-duration=300s
+
+
+4) wriet python sun=bscrition code which shoudl publisg the data for every 1 min 
+
+
+
+to check message puhsed to topic or notification
+gcloud pubsub subscriptions pull py-orders-topic-sub \
+  --project=vctbatch-dev45 \
+  --limit=5
+
+
+for debug 
+-------
+gcloud pubsub subscriptions create py-orders-debug-sub \
+  --project=vctbatch-dev45 \
+  --topic=py-orders-topic
+
+gcloud pubsub subscriptions pull py-orders-debug-sub \
+  --project=vctbatch-dev45 \
+  --limit=5 
+
+==============Scenario 3 Pub/Sub to Big Query ==========================
+
+1) create dataset
+bq mk -d vctbatch-dev45:employe_pubsub_ds
+
+2) create table
+
+bq mk --table --schema=/home/vctbatch45/schemas/employe_schema.json vctbatch-dev45:employe_pubsub_ds.employe_pubsub
+ 
+
+4) grant access :
+gcloud projects add-iam-policy-binding vctbatch-dev45 \
+  --member="serviceAccount:916677452576-compute@developer.gserviceaccount.com" \
+  --role="roles/bigquery.admin"
+
+3) create topic 
+gcloud pubsub topics create employee-topic
+
+4) create subscription
+gcloud pubsub subscriptions create employee-topic-sub \
+--bigquery-table="vctbatch-dev45.employe_pubsub_ds.employe_pubsub"\ 
+--bigquery-service-account-email="916677452576-compute@developer.gserviceaccount.com"
+
+gcloud pubsub subscriptions create employee-topic-sub \
+  --project=vctbatch-dev45 \
+  --topic=py-orders-topic \
+  --bigquery-table=vctbatch-dev45:employe_pubsub_ds.employe_pubsub \
+  --use-table-schema
+
+
+
+
+
+
+Python Producer
+   |
+   v
+Pub/Sub Topic
+   |
+   v
+Pub/Sub Subscription
+   |
+   v
+Dataflow (Streaming)
+   |
+   v
+BigQuery Table
+=============================================
+
+Step1 :Create topic 
+name: projects/vctbatch-dev45/topics/orders_topic
+projects/vctbatch-dev45/subscriptions/order_subscriptions
+
+
+step2 :
+CREATE DATASET realtime_ds;
+CREATE TABLE realtime_ds.orders (
+  order_id STRING,
+  product STRING,
+  price INT64,
+  event_time TIMESTAMP
+);
+
+----------OR ---------------
+bq mk -d realtime_ds
+
+bq mk -t --schema=order_id:string,product:string,price:INT64,event_time:INT64 realtime_ds.orders 

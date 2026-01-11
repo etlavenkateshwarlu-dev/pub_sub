@@ -1,0 +1,45 @@
+
+
+C:\kafka_2.13-3.4.1
+
+to start zookeeper
+-------------------
+.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties
+
+to start kfka server 
+--------------------
+.\bin\windows\kafka-server-start,bat  .\config\server.properties
+
+
+create topic 
+--------------
+.\bin\windows\kafka-topics.bat ^
+--create ^
+--bootstrap-server localhost:9092 ^
+--replication-factor 1 ^
+--partitions 3 ^
+--topic orders ^
+
+.\bin\windows\kafka-topics.bat --list --zookeeper localhost:2181
+
+
+.\bin\windows\kafka-topics.bat --list --bootstrap-server localhost:9092
+
+
+
+
+Producer 
+---------
+.\bin\windows\kafka-console-producer.bat ^
+--topic orders ^
+--bootstrap-server localhost:9092
+
+
+consumer 
+-------------
+
+.\bin\windows\kafka-console-consumer.bat ^
+--topic orders ^
+--from-beginning ^
+--bootstrap-server localhost:9092
+
