@@ -3,7 +3,7 @@ import json
 import csv
 import time
 
-project_id='vctbatch-dev45'
+project_id='vctbatch-45'
 topic_name='employee-topic'
 subscriber_name='employee-topic-sub'
 csv_file='employee_1.csv'
@@ -17,6 +17,7 @@ boolflag=True
 with open(csv_file,mode='r') as file:
     reader=csv.DictReader(file)
     for row in reader:
+        count=count+1
         message=json.dumps(row).encode("utf-8")
         publisher.publish(topic_path,message)
         print(f'published ,message is  : {message}')

@@ -90,16 +90,16 @@ gcloud pubsub subscriptions pull py-orders-debug-sub \
 ==============Scenario 3 Pub/Sub to Big Query ==========================
 
 1) create dataset
-bq mk -d vctbatch-dev45:employe_pubsub_ds
+bq mk -d vctbatch-45:employe_pubsub_ds
 
 2) create table
 
-bq mk --table --schema=/home/vctbatch45/schemas/employe_schema.json vctbatch-dev45:employe_pubsub_ds.employe_pubsub
+bq mk --table --schema=/home/vctbatch-45/schema/employe_schema.json vctbatch-45:employe_pubsub_ds.employe_pubsub
  
 
 4) grant access :
-gcloud projects add-iam-policy-binding vctbatch-dev45 \
-  --member="serviceAccount:916677452576-compute@developer.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding vctbatch-45 \
+  --member="serviceAccount:vctbatch-45@vctbatch-45.iam.gserviceaccount.com" \
   --role="roles/bigquery.admin"
 
 3) create topic 
@@ -107,16 +107,19 @@ gcloud pubsub topics create employee-topic
 
 4) create subscription
 gcloud pubsub subscriptions create employee-topic-sub \
---bigquery-table="vctbatch-dev45.employe_pubsub_ds.employe_pubsub"\ 
---bigquery-service-account-email="916677452576-compute@developer.gserviceaccount.com"
-
-gcloud pubsub subscriptions create employee-topic-sub \
-  --project=vctbatch-dev45 \
-  --topic=py-orders-topic \
-  --bigquery-table=vctbatch-dev45:employe_pubsub_ds.employe_pubsub \
-  --use-table-schema
+--topic=employee-topic \
+--bigquery-table="vctbatch-45.employe_pubsub_ds.employe_pubsub" \
+--bigquery-service-account-email="vctbatch-45@vctbatch-45.iam.gserviceaccount.com" \
+--use-table-schema
 
 
+gcloud pubsub subscriptions create employee-debug-sub \
+  --project=vctbatch-45 \
+  --topic=employee-topic
+
+gcloud pubsub subscriptions pull employee-debug-sub \
+  --project=vctbatch-45 \
+  --limit=5
 
 
 
